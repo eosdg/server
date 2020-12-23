@@ -18,11 +18,26 @@ const io = new SocketServer(Http, {
 // eslint-disable-next-line no-undef
 const VERSION = process.env.npm_package_version;
 const PORT = 3420;
-let USERCOUNT = 0;
+const CONNECTIONSLIMIT = 300;
 
-const helo = {
-    version: VERSION,
-    userCount: USERCOUNT
+let users = [];
+
+
+
+
+function notifyAllUsers() {
+    for (const user of users) {
+        user.socket.emit("info", {
+            id: user.id,
+            version: VERSION,
+            usersnumber: users.length
+        })
+    }
+}
+
+function disconnectUser(id) {
+    users = users.filter(user => user.id !== id);
+    notifyAllUsers();
 }
 
 function getID(length = 16) {
@@ -31,22 +46,30 @@ function getID(length = 16) {
 
 io.on("connection", socket => {
     const id = getID();
-    USERCOUNT++;
+    if (users.length >= CONNECTIONSLIMIT) {
+        socket.emit('err', { message: 'Maximale Verbindungsanzahl erreicht' })
+        socket.disconnect()
+        console.log('Disconnected...')
+        return;
+    }
+    users.push({id, socket});
+    notifyAllUsers();
     console.log(`user ${id} connected`);
-    console.log(`${USERCOUNT} users connected`);
+    console.log(`${users.length} users connected`);
 
-    socket.emit("helo", {
+    socket.emit("info", {
         id,
-        ...helo
+        version: VERSION,
+        usersnumber: users.length
     });
 
     socket.on("joinGame", data => {
 
     });
     socket.on('disconnect', () => {
-        USERCOUNT--;
+        disconnectUser(id);
         console.log(`user ${id} disconnected`);
-        console.log(`${USERCOUNT} users connected`);
+        console.log(`${users.length} users connected`);
     });
 });
 
