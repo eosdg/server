@@ -4,6 +4,9 @@ import {Server} from "http";
 
 import {Server as SocketServer} from "socket.io";
 
+import questions from "@eosdg/questions";
+
+
 const Express = express();
 const Http = Server(Express);
 const io = new SocketServer(Http, {
@@ -12,9 +15,9 @@ const io = new SocketServer(Http, {
     }
 });
 
-
+// eslint-disable-next-line no-undef
+const VERSION = process.env.npm_package_version;
 const PORT = 3420;
-const VERSION = "0.1.0";
 let USERCOUNT = 0;
 
 const helo = {
