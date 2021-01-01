@@ -27,13 +27,17 @@ let usernames = {}
 
 function notifyAllUsers() {
     io.emit("info", {
-            version: VERSION,
-            usersnumber: users.length
-        })
+        version: VERSION,
+        usersnumber: users.length
+    })
 }
 
 function leaveGameAndCleanUp(id, gameID) {
+    if (!games[gameID]) {
+        return;
+    }
     games[gameID].participants = games[gameID].participants.filter(item => item !== id);
+    deliverToGameparticipants(gameID, "participantsChanged", games[gameID]?.participants.map(user => usernames[user] || "Unbekannt"));
     if (games[gameID].participants.length === 0) {
         delete games[gameID]
     }
@@ -53,16 +57,18 @@ function getID(length = 16) {
 }
 
 function deliverToGameparticipants(gameID, title, data) {
-    const participants = games[gameID].participants;
-    for (const participant of participants) {
-        users.filter(user => user.id === participant)[0].socket.emit(title, data);
+    const participants = games[gameID]?.participants;
+    if (participants) {
+        for (const participant of participants) {
+            users.filter(user => user.id === participant)[0].socket.emit(title, data);
+        }
     }
 }
 
 io.on("connection", socket => {
     const id = getID();
     if (users.length >= CONNECTIONSLIMIT) {
-        socket.emit('err', { message: 'Maximale Verbindungsanzahl erreicht' })
+        socket.emit('err', {message: 'Maximale Verbindungsanzahl erreicht'})
         socket.disconnect()
         console.log('Disconnected...')
         return;
@@ -87,7 +93,7 @@ io.on("connection", socket => {
         }
     });
     socket.on("createGame", () => {
-        console.log("User "+id+" wants to create game")
+        console.log("User " + id + " wants to create game")
         let gameID = getID(4);
         while (games[gameID]) {
             gameID = getID(4);
@@ -96,27 +102,43 @@ io.on("connection", socket => {
             id: gameID,
             host: id,
             participants: [id],
+            questionSets: questions,
+            selectedSets: Object.keys(questions),
+            maxSips: NaN,
             state: "lobby"
         }
         socket.emit("createdGame", gameID);
     });
 
-    socket.on('enterGame', gameID=> {
-        if(games[gameID]?.participants.indexOf(id)<0) games[gameID]?.participants.push(id);
-        deliverToGameparticipants(gameID, "participantsChanged", games[gameID]?.participants.map(user => usernames[user]|| "Unbekannt"));
+    socket.on('enterGame', gameID => {
+        if (games[gameID]?.participants.indexOf(id) < 0) games[gameID]?.participants.push(id);
+        deliverToGameparticipants(gameID, "participantsChanged", games[gameID]?.participants.map(user => usernames[user] || "Unbekannt"));
     });
 
     socket.on("amIHost", gameID => {
         socket.emit("amIHost", games[gameID]?.host === id);
     });
 
-    socket.on("username", name => usernames[id] = name);
+    socket.on("getGameData", gameID => {
+        socket.emit("getGameData", games[gameID]);
+    });
+
+    socket.on("username", name => {
+        usernames[id] = name;
+        for (const gameID in games) {
+            if (games[gameID].participants.includes(id)) {
+                deliverToGameparticipants(gameID, "participantsChanged", games[gameID]?.participants.map(user => usernames[user] || "Unbekannt"));
+            }
+        }
+    });
 
     socket.on('disconnect', () => {
         disconnectUser(id);
         console.log(`user ${id} disconnected`);
         console.log(`${users.length} users connected`);
     });
+
+    socket.on("leaveGame", (gameId) => leaveGameAndCleanUp(id, gameId))
 });
 
 Http.listen(PORT, () => {
