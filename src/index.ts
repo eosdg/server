@@ -117,11 +117,18 @@ io.on("connection", socket => {
 
     socket.on("startGame", params => {
         const firstQuestion = games[params.gameID].startGame(params.settings);
-        socket.emit("question", firstQuestion);
+        deliverToGameparticipants(params.gameID, "question", firstQuestion);
     });
 
     socket.on("nextQuestion", gameID => {
-        socket.emit("question", games[gameID].nextQuestion());
+        deliverToGameparticipants(gameID, "question", games[gameID].nextQuestion());
+    });
+
+    socket.on("answer", answer => {
+        const res = games[answer.gameID].addAnswerAndReturnResults(answer.answer, usernames[id], id);
+        if (res) {
+            deliverToGameparticipants(answer.gameID, "results", res);
+        }
     });
 
     socket.on("getGameData", gameID => {

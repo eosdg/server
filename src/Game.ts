@@ -10,6 +10,8 @@ function shuffle(a) {
     return a;
 }
 
+const DEFAULT_SIPS = 3;
+
 export class Game {
     /** Maximal amount of sips to be assigned for one question */
     private _maxSips: number;
@@ -32,6 +34,13 @@ export class Game {
     /** Zeitlimit pro Frage */
     private _timeLimit: number;
 
+    private readonly _currentResults: {
+        question: Record<string, unknown>;
+        results: Record<string, string>;
+        sips: Record<string, number>;
+        answered: Array<string>;
+    }
+
     /**
      * Creates a new Game
      * @param {string} id The ID of he new game
@@ -45,6 +54,12 @@ export class Game {
         this._questionSets = questionSets;
         this._maxSips = NaN;
         this._questions = [];
+        this._currentResults = {
+            question: null,
+            results: {},
+            sips: {},
+            answered: []
+        }
     }
 
     startGame(
@@ -53,7 +68,6 @@ export class Game {
             '#/properties/zeitlimit': string,
             '#/properties/kategorien': Array<string>
         }): Record<string, unknown> {
-        console.log(settings);
         if (typeof settings['#/properties/maxSips'] === "string") {
             this._maxSips = Number.parseInt(settings['#/properties/maxSips']);
         }
@@ -70,50 +84,108 @@ export class Game {
     }
 
     nextQuestion(): Record<string, unknown> {
+        const question = this._questions?.pop();
+        this._currentResults.question = question;
+        this._currentResults.results = {};
+        this._currentResults.sips = {};
         return {
-            question:this._questions?.pop(),
+            question,
             timeLimit: this._timeLimit
         };
     }
 
+    addAnswerAndReturnResults(answer: string, username: string, id: string): {
+        question: Record<string, unknown>;
+        results: Record<string, string>;
+        sips: Record<string, number>;
+    } | false {
+        this._currentResults.results[username] = answer;
+        this._currentResults.answered.push(id);
 
-    get timeLimit(): number {
+        for (const participant of this._participants) {
+            if (!this._currentResults.answered.includes(participant)) {
+                return false;
+            }
+        }
+
+        //Auswertung
+        if (this._currentResults.question.type === "neverHaveIever") {
+            for (const username of Object.keys(this._currentResults.results)) {
+                if (this._currentResults.results[username] === "Doch") {
+                    this._currentResults.sips[username] = Math.min(<number>(this._currentResults.question.sips || DEFAULT_SIPS), (this._maxSips || Number.MAX_SAFE_INTEGER));
+                } else {
+                    this._currentResults.sips[username] = 0;
+                }
+            }
+        }
+
+        //@TODO
+
+        return this._currentResults;
+
+
+    }
+
+    get timeLimit()
+        :
+        number {
         return this._timeLimit;
     }
 
-    get maxSips(): number {
+    get maxSips()
+        :
+        number {
         return this._maxSips;
     }
 
-    set maxSips(value: number) {
+    set maxSips(value
+                    :
+                    number
+    ) {
         this._maxSips = value;
     }
 
-    get id(): string {
+    get id()
+        :
+        string {
         return this._id;
     }
 
-    get questions(): Array<Record<string, unknown>> {
+    get questions()
+        :
+        Array<Record<string, unknown>> {
         return this._questions;
     }
 
-    set questions(value: Array<Record<string, unknown>>) {
+    set questions(value
+                      :
+                      Array<Record<string, unknown>>
+    ) {
         this._questions = value;
     }
 
-    get host(): string {
+    get host()
+        :
+        string {
         return this._host;
     }
 
-    get participants(): Array<string> {
+    get participants()
+        :
+        Array<string> {
         return this._participants;
     }
 
-    set participants(value: Array<string>) {
+    set participants(value
+                         :
+                         Array<string>
+    ) {
         this._participants = value;
     }
 
-    get questionSets(): Record<string, unknown> {
+    get questionSets()
+        :
+        Record<string, unknown> {
         return this._questionSets;
     }
 
