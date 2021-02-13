@@ -2,14 +2,16 @@ import express from "express";
 
 import {Server} from "http";
 
-import {Server as SocketServer} from "socket.io";
+import * as socketio from "socket.io";
+
+import { Game } from "./Game";
 
 import questions from "@eosdg/questions";
 
 
-const Express = express();
-const Http = Server(Express);
-const io = new SocketServer(Http, {
+const Express = express;
+const Http = new Server(Express);
+const io = new socketio.Server(Http, {
     cors: {
         origin: '*'
     }
@@ -21,9 +23,9 @@ const PORT = 3420;
 const CONNECTIONSLIMIT = 300;
 
 let users = [];
-let games = {};
-let usernames = {}
 
+const games: { [s: string]: Game; } = {};
+const usernames = {}
 
 function notifyAllUsers() {
     io.emit("info", {
@@ -60,7 +62,7 @@ function deliverToGameparticipants(gameID, title, data) {
     const participants = games[gameID]?.participants;
     if (participants) {
         for (const participant of participants) {
-            users.filter(user => user.id === participant)[0].socket.emit(title, data);
+            users.filter(user => user.id === participant)[0]?.socket.emit(title, data);
         }
     }
 }
@@ -98,15 +100,9 @@ io.on("connection", socket => {
         while (games[gameID]) {
             gameID = getID(4);
         }
-        games[gameID] = {
-            id: gameID,
-            host: id,
-            participants: [id],
-            questionSets: questions,
-            selectedSets: Object.keys(questions),
-            maxSips: NaN,
-            state: "lobby"
-        }
+
+        games[gameID] = new Game(gameID, id, questions);
+        //Object.keys(questions)
         socket.emit("createdGame", gameID);
     });
 
@@ -117,6 +113,10 @@ io.on("connection", socket => {
 
     socket.on("amIHost", gameID => {
         socket.emit("amIHost", games[gameID]?.host === id);
+    });
+
+    socket.on("startGame", params => {
+        console.log(params);
     });
 
     socket.on("getGameData", gameID => {
