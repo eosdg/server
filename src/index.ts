@@ -116,7 +116,8 @@ io.on("connection", socket => {
     });
 
     socket.on("startGame", params => {
-        console.log(params);
+        const firstQuestion = games[params.gameID].startGame(params.settings);
+        socket.emit("question", firstQuestion);
     });
 
     socket.on("getGameData", gameID => {

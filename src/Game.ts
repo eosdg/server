@@ -17,6 +17,9 @@ export class Game {
     /** The Question Sets available */
     private readonly _questionSets: Record<string, unknown>;
 
+    /** Zeitlimit pro Frage */
+    private _timeLimit: number;
+
     /**
      * Creates a new Game
      * @param {string} id The ID of he new game
@@ -29,11 +32,43 @@ export class Game {
         this._participants = [host];
         this._questionSets = questionSets;
         this._maxSips = NaN;
+        this._questions = [];
+    }
+
+    startGame(
+        settings: {
+            '#/properties/maxSips': string | unknown,
+            '#/properties/zeitlimit': string,
+            '#/properties/kategorien': Array<string>
+        }): Record<string, unknown> {
+        console.log(settings);
+        if (typeof settings['#/properties/maxSips'] === "string") {
+            this._maxSips = Number.parseInt(settings['#/properties/maxSips']);
+        }
+        this._timeLimit = Number.parseInt(settings['#/properties/zeitlimit'])
+        const kategorien: Array<string> = settings['#/properties/kategorien'];
+        for (const string of kategorien) {
+            const q = this._questionSets[string]["questions"];
+            for (const question of q) {
+                this._questions.push(question);
+            }
+        }
+        return this.nextQuestion();
+    }
+
+    nextQuestion(): Record<string, unknown> {
+        return this._questions?.pop();
+    }
+
+
+    get timeLimit(): number {
+        return this._timeLimit;
     }
 
     get maxSips(): number {
         return this._maxSips;
     }
+
     set maxSips(value: number) {
         this._maxSips = value;
     }
@@ -49,6 +84,7 @@ export class Game {
     set questions(value: Array<Record<string, unknown>>) {
         this._questions = value;
     }
+
     get host(): string {
         return this._host;
     }
@@ -56,6 +92,7 @@ export class Game {
     get participants(): Array<string> {
         return this._participants;
     }
+
     set participants(value: Array<string>) {
         this._participants = value;
     }
@@ -63,4 +100,5 @@ export class Game {
     get questionSets(): Record<string, unknown> {
         return this._questionSets;
     }
+
 }
