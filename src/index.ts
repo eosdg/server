@@ -6,7 +6,7 @@ import * as socketio from "socket.io";
 
 import { Game } from "./Game";
 
-// import questions from "@eosdg/questions";
+import questions from "@eosdg/questions";
 
 
 const Express = express;
@@ -100,7 +100,8 @@ io.on("connection", socket => {
         while (games[gameID]) {
             gameID = getID(4);
         }
-        games[gameID] = new Game(gameID, id, []);
+
+        games[gameID] = new Game(gameID, id, questions);
         //Object.keys(questions)
         socket.emit("createdGame", gameID);
     });

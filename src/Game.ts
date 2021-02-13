@@ -15,7 +15,7 @@ export class Game {
     private _participants: Array<string>;
 
     /** The Question Sets available */
-    private readonly _questionSets: Array<string>;
+    private readonly _questionSets: Record<string, unknown>;
 
     /**
      * Creates a new Game
@@ -23,7 +23,7 @@ export class Game {
      * @param {string} host The ID of the host
      * @param {Array<Object>} questionSets The Question Sets available
      */
-    constructor(id: string, host: string, questionSets: Array<string>) {
+    constructor(id: string, host: string, questionSets: Record<string, unknown>) {
         this._id = id;
         this._host = host;
         this._participants = [host];
@@ -60,7 +60,7 @@ export class Game {
         this._participants = value;
     }
 
-    get questionSets(): Array<string> {
+    get questionSets(): Record<string, unknown> {
         return this._questionSets;
     }
 }
