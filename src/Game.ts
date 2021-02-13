@@ -1,3 +1,15 @@
+/**
+ * Shuffles array in place. ES6 version
+ * @param {Array} a items An array containing the items.
+ */
+function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
 export class Game {
     /** Maximal amount of sips to be assigned for one question */
     private _maxSips: number;
@@ -53,11 +65,15 @@ export class Game {
                 this._questions.push(question);
             }
         }
+        this._questions = shuffle(this._questions);
         return this.nextQuestion();
     }
 
     nextQuestion(): Record<string, unknown> {
-        return this._questions?.pop();
+        return {
+            question:this._questions?.pop(),
+            timeLimit: this._timeLimit
+        };
     }
 
 

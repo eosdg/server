@@ -120,6 +120,10 @@ io.on("connection", socket => {
         socket.emit("question", firstQuestion);
     });
 
+    socket.on("nextQuestion", gameID => {
+        socket.emit("question", games[gameID].nextQuestion());
+    });
+
     socket.on("getGameData", gameID => {
         socket.emit("getGameData", games[gameID]);
     });
