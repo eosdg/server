@@ -136,7 +136,7 @@ export class Game {
 
         //Majority
         if (this._currentResults.question.type === "majority") {
-            const answers= {};
+            const answers = {};
             for (const username of Object.keys(this._currentResults.results)) {
                 if (this._currentResults.results[username]) {
                     answers[this._currentResults.results[username]] = (answers[this._currentResults.results[username]] || 0) + 1;
@@ -167,7 +167,7 @@ export class Game {
 
         //Participants Voting
         if (this._currentResults.question.type === "voting") {
-            const answers= {};
+            const answers = {};
             for (const username of Object.keys(this._currentResults.results)) {
                 if (this._currentResults.results[username]) {
                     answers[this._currentResults.results[username]] = (answers[this._currentResults.results[username]] || 0) + 1;
@@ -206,7 +206,7 @@ export class Game {
                     user: username
                 });
             }
-            solutions.sort((a,b) => {
+            solutions.sort((a, b) => {
                 return Math.abs(correctSolution - a.answer) - Math.abs(correctSolution - b.answer);
             })
 
@@ -215,8 +215,6 @@ export class Game {
             }
             this._currentResults.correctSolution = <string>this._currentResults.question["solution"]
         }
-
-        //@TODO
 
 
         const res = this._currentResults;
