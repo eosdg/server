@@ -8,6 +8,8 @@ import { Game } from "./Game";
 
 import questions from "@eosdg/questions";
 
+import pjson from "../package.json"
+
 
 const Express = express;
 const Http = new Server(Express);
@@ -18,7 +20,7 @@ const io = new socketio.Server(Http, {
 });
 
 // eslint-disable-next-line no-undef
-const VERSION = process.env.npm_package_version;
+const VERSION = pjson.version;
 const PORT = 3420;
 const CONNECTIONSLIMIT = 300;
 
