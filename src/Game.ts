@@ -87,9 +87,13 @@ export class Game {
 
     nextQuestion(): Record<string, unknown> {
         const question = this._questions?.pop();
-        this._currentResults.question = question;
-        this._currentResults.results = {};
-        this._currentResults.sips = {};
+        this._currentResults = {
+            question,
+            results: {},
+            sips: {},
+            answered: [],
+            correctSolution: null
+        }
         return {
             question,
             timeLimit: this._timeLimit
@@ -113,7 +117,7 @@ export class Game {
         //Auswertung
         if (this._currentResults.question.type === "neverHaveIever") {
             for (const username of Object.keys(this._currentResults.results)) {
-                if (this._currentResults.results[username] === "Doch") {
+                if (this._currentResults.results[username] !== "Noch nie") {
                     this._currentResults.sips[username] = Math.min(<number>(this._currentResults.question.sips || DEFAULT_SIPS), (this._maxSips || Number.MAX_SAFE_INTEGER));
                 } else {
                     this._currentResults.sips[username] = 0;
@@ -187,7 +191,7 @@ export class Game {
             }
 
             for (const username of Object.keys(this._currentResults.results)) {
-                if (!correctSolution.includes(username)) {
+                if (correctSolution.includes(username)) {
                     this._currentResults.sips[username] = Math.min(<number>(this._currentResults.question.sips || DEFAULT_SIPS), (this._maxSips || Number.MAX_SAFE_INTEGER));
                 } else {
                     this._currentResults.sips[username] = 0;
@@ -201,8 +205,9 @@ export class Game {
             const correctSolution: number = Number.parseInt(<string>this._currentResults.question["solution"]);
             const solutions = [];
             for (const username of Object.keys(this._currentResults.results)) {
+                const answer = this._currentResults.results[username] ? Number.parseInt(this._currentResults.results[username]) : Number.MAX_SAFE_INTEGER;
                 solutions.push({
-                    answer: Number.parseInt(this._currentResults.results[username]),
+                    answer,
                     user: username
                 });
             }
@@ -218,14 +223,6 @@ export class Game {
 
 
         const res = this._currentResults;
-
-        this._currentResults = {
-            question: null,
-            results: {},
-            sips: {},
-            answered: [],
-            correctSolution: null
-        }
         return res;
 
 
