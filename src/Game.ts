@@ -119,6 +119,17 @@ export class Game {
             }
         }
 
+        //MultipleChoice
+        if (this._currentResults.question.type === "multipleChoice") {
+            const correctSolution: number = <number>this._currentResults.question["correctSolution"];
+            for (const username of Object.keys(this._currentResults.results)) {
+                if (this._currentResults.results[username] !== this._currentResults.question.solutions[correctSolution]) {
+                    this._currentResults.sips[username] = Math.min(<number>(this._currentResults.question.sips || DEFAULT_SIPS), (this._maxSips || Number.MAX_SAFE_INTEGER));
+                } else {
+                    this._currentResults.sips[username] = 0;
+                }
+            }
+        }
         //@TODO
 
         return this._currentResults;
