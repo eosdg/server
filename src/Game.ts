@@ -34,7 +34,8 @@ export class Game {
     /** Zeitlimit pro Frage */
     private _timeLimit: number;
 
-    private readonly _currentResults: {
+    private _currentResults: {
+        correctSolution: string;
         question: Record<string, unknown>;
         results: Record<string, string>;
         sips: Record<string, number>;
@@ -58,7 +59,8 @@ export class Game {
             question: null,
             results: {},
             sips: {},
-            answered: []
+            answered: [],
+            correctSolution: null
         }
     }
 
@@ -129,10 +131,42 @@ export class Game {
                     this._currentResults.sips[username] = 0;
                 }
             }
+            this._currentResults.correctSolution = this._currentResults.question.solutions[correctSolution]
         }
+
+        //Number
+        if (this._currentResults.question.type === "number") {
+            const correctSolution: number = Number.parseInt(<string>this._currentResults.question["solution"]);
+            const solutions = [];
+            for (const username of Object.keys(this._currentResults.results)) {
+                solutions.push({
+                    answer: Number.parseInt(this._currentResults.results[username]),
+                    user: username
+                });
+            }
+            solutions.sort((a,b) => {
+                return Math.abs(correctSolution - a.answer) - Math.abs(correctSolution - b.answer);
+            })
+
+            for (let i = 0; i < solutions.length; i++) {
+                this._currentResults.sips[solutions[i].user] = Math.min(i, (this._maxSips || Number.MAX_SAFE_INTEGER));
+            }
+            this._currentResults.correctSolution = <string>this._currentResults.question["solution"]
+        }
+
         //@TODO
 
-        return this._currentResults;
+
+        const res = this._currentResults;
+
+        this._currentResults = {
+            question: null,
+            results: {},
+            sips: {},
+            answered: [],
+            correctSolution: null
+        }
+        return res;
 
 
     }
