@@ -19,7 +19,6 @@ const io = new socketio.Server(Http, {
     }
 });
 
-// eslint-disable-next-line no-undef
 const VERSION = pjson.version;
 const PORT = 3420;
 const CONNECTIONSLIMIT = 300;
