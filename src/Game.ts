@@ -134,6 +134,37 @@ export class Game {
             this._currentResults.correctSolution = this._currentResults.question.solutions[correctSolution]
         }
 
+        //MultipleChoice
+        if (this._currentResults.question.type === "majority") {
+            const answers= {};
+            for (const username of Object.keys(this._currentResults.results)) {
+                if (this._currentResults.results[username]) {
+                    answers[this._currentResults.results[username]] = (answers[this._currentResults.results[username]] || 0) + 1;
+                }
+            }
+            let highestCount = 0;
+            for (const answer1 in answers) {
+                if (answers[answer1] > highestCount) {
+                    highestCount = answers[answer1];
+                }
+            }
+            const correctSolution = [];
+            for (const answer1 in answers) {
+                if (answers[answer1] === highestCount) {
+                    correctSolution.push(answer1);
+                }
+            }
+
+            for (const username of Object.keys(this._currentResults.results)) {
+                if (!correctSolution.includes(this._currentResults.results[username])) {
+                    this._currentResults.sips[username] = Math.min(<number>(this._currentResults.question.sips || DEFAULT_SIPS), (this._maxSips || Number.MAX_SAFE_INTEGER));
+                } else {
+                    this._currentResults.sips[username] = 0;
+                }
+            }
+            this._currentResults.correctSolution = correctSolution.join(", ");
+        }
+
         //Number
         if (this._currentResults.question.type === "number") {
             const correctSolution: number = Number.parseInt(<string>this._currentResults.question["solution"]);
