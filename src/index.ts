@@ -9,6 +9,7 @@ import { Game } from "./Game";
 import questions from "@eosdg/questions";
 
 import pjson from "../package.json"
+import {User, users} from "./User";
 
 
 const Express = express;
@@ -23,10 +24,8 @@ const VERSION = pjson.version;
 const PORT = 3420;
 const CONNECTIONSLIMIT = 300;
 
-let users = [];
 
 const games: { [s: string]: Game; } = {};
-const usernames = {}
 
 function notifyAllUsers() {
     io.emit("info", {
@@ -40,15 +39,14 @@ function leaveGameAndCleanUp(id, gameID) {
         return;
     }
     games[gameID].participants = games[gameID].participants.filter(item => item !== id);
-    deliverToGameparticipants(gameID, "participantsChanged", games[gameID]?.participants.map(user => usernames[user] || "Unbekannt"));
+    deliverToGameparticipants(gameID, "participantsChanged", games[gameID]?.participants.map(user => User.getUser(user).username || "Unbekannt"));
     if (games[gameID].participants.length === 0) {
         delete games[gameID]
     }
 }
 
 function disconnectUser(id) {
-    users = users.filter(user => user.id !== id);
-    delete usernames[id];
+    User.remove(id);
     notifyAllUsers();
     for (const key of Object.keys(games)) {
         leaveGameAndCleanUp(id, key);
@@ -76,7 +74,7 @@ io.on("connection", socket => {
         console.log('Disconnected...')
         return;
     }
-    users.push({id, socket});
+    users.push(new User(id, socket));
     notifyAllUsers();
     console.log(`user ${id} connected`);
     console.log(`${users.length} users connected`);
@@ -109,7 +107,7 @@ io.on("connection", socket => {
 
     socket.on('enterGame', gameID => {
         if (games[gameID]?.participants.indexOf(id) < 0) games[gameID]?.participants.push(id);
-        deliverToGameparticipants(gameID, "participantsChanged", games[gameID]?.participants.map(user => usernames[user] || "Unbekannt"));
+        deliverToGameparticipants(gameID, "participantsChanged", games[gameID]?.participants.map(user => User.getUser(user).username || "Unbekannt"));
     });
 
     socket.on("amIHost", gameID => {
@@ -126,7 +124,7 @@ io.on("connection", socket => {
     });
 
     socket.on("answer", answer => {
-        const res = games[answer.gameID].addAnswerAndReturnResults(answer.answer, usernames[id], id);
+        const res = games[answer.gameID].addAnswerAndReturnResults(answer.answer, User.getUser(id).username, id);
         if (res) {
             deliverToGameparticipants(answer.gameID, "results", res);
         }
@@ -137,10 +135,10 @@ io.on("connection", socket => {
     });
 
     socket.on("username", name => {
-        usernames[id] = name;
+        User.getUser(id).username = name;
         for (const gameID in games) {
             if (games[gameID].participants.includes(id)) {
-                deliverToGameparticipants(gameID, "participantsChanged", games[gameID]?.participants.map(user => usernames[user] || "Unbekannt"));
+                deliverToGameparticipants(gameID, "participantsChanged", games[gameID]?.participants.map(user => User.getUser(user).username || "Unbekannt"));
             }
         }
     });
