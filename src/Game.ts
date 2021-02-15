@@ -1,3 +1,5 @@
+import {mapUserToUsername, users} from "./User";
+
 /**
  * Shuffles array in place. ES6 version
  * @param {Array} a items An array containing the items.
@@ -100,6 +102,23 @@ export class Game {
         };
     }
 
+    deliverToGameparticipants(title: string, data: unknown): void {
+        const participants = this._participants;
+        if (participants) {
+            for (const participant of participants) {
+                users.filter(user => user.id === participant)[0]?.socket.emit(title, data);
+            }
+        }
+    }
+
+    leaveGameAndCleanUp(id: string): void {
+        this._participants = this._participants.filter(item => item !== id);
+        this.deliverToGameparticipants("participantsChanged", this._participants.map(mapUserToUsername));
+        if (this._participants.length === 0) {
+            delete games[this._id];
+        }
+    }
+
     addAnswerAndReturnResults(answer: string, username: string, id: string): {
         question: Record<string, unknown>;
         results: Record<string, string>;
@@ -138,11 +157,14 @@ export class Game {
             this._currentResults.correctSolution = this._currentResults.question.solutions[correctSolution]
         }
 
-        //Majority
-        if (this._currentResults.question.type === "majority") {
+
+        function setupCorrectSolutions() {
             const answers = {};
+            // noinspection JSPotentiallyInvalidUsageOfClassThis
             for (const username of Object.keys(this._currentResults.results)) {
+                // noinspection JSPotentiallyInvalidUsageOfClassThis
                 if (this._currentResults.results[username]) {
+                    // noinspection JSPotentiallyInvalidUsageOfClassThis
                     answers[this._currentResults.results[username]] = (answers[this._currentResults.results[username]] || 0) + 1;
                 }
             }
@@ -158,6 +180,12 @@ export class Game {
                     correctSolution.push(answer1);
                 }
             }
+            return correctSolution;
+        }
+
+        //Majority
+        if (this._currentResults.question.type === "majority") {
+            const correctSolution = setupCorrectSolutions.call(this);
 
             for (const username of Object.keys(this._currentResults.results)) {
                 if (!correctSolution.includes(this._currentResults.results[username])) {
@@ -171,24 +199,7 @@ export class Game {
 
         //Participants Voting
         if (this._currentResults.question.type === "voting") {
-            const answers = {};
-            for (const username of Object.keys(this._currentResults.results)) {
-                if (this._currentResults.results[username]) {
-                    answers[this._currentResults.results[username]] = (answers[this._currentResults.results[username]] || 0) + 1;
-                }
-            }
-            let highestCount = 0;
-            for (const answer1 in answers) {
-                if (answers[answer1] > highestCount) {
-                    highestCount = answers[answer1];
-                }
-            }
-            const correctSolution = [];
-            for (const answer1 in answers) {
-                if (answers[answer1] === highestCount) {
-                    correctSolution.push(answer1);
-                }
-            }
+            const correctSolution = setupCorrectSolutions.call(this);
 
             for (const username of Object.keys(this._currentResults.results)) {
                 if (correctSolution.includes(username)) {
@@ -222,8 +233,7 @@ export class Game {
         }
 
 
-        const res = this._currentResults;
-        return res;
+        return this._currentResults;
 
 
     }
@@ -292,3 +302,7 @@ export class Game {
     }
 
 }
+
+export const games: { [s: string]: Game; } = {};
+
+
