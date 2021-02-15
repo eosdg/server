@@ -58,5 +58,5 @@ export function bindGameListeners(socket: Socket, id: string): void {
             games[answer.gameID]?.deliverToGameparticipants("results", res);
         }
     });
-    socket.on("leaveGame", (gameId) => games[gameId].leaveGameAndCleanUp(id))
+    socket.on("leaveGame", (gameId) => games[gameId]?.leaveGameAndCleanUp(id))
 }
