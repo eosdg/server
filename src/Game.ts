@@ -1,4 +1,4 @@
-import {mapUserToUsername, users} from "./User";
+import {mapUserToUsername, User, users} from "./User";
 
 /**
  * Shuffles array in place. ES6 version
@@ -25,7 +25,7 @@ export class Game {
     private _questions: Array<Record<string, unknown>>;
 
     /** The ID of the game's host */
-    private readonly _host: string;
+    private _host: string;
 
     /** The participants' IDs */
     private _participants: Array<string>;
@@ -113,6 +113,10 @@ export class Game {
 
     leaveGameAndCleanUp(id: string): void {
         this._participants = this._participants.filter(item => item !== id);
+        if (this._host === id) {
+            this._host = this._participants[0];
+            User.getUser(this._host).socket.emit("newHost");
+        }
         this.deliverToGameparticipants("participantsChanged", this._participants.map(mapUserToUsername));
         if (this._participants.length === 0) {
             delete games[this._id];
