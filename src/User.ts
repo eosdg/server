@@ -56,7 +56,7 @@ export class User {
 export let users: Array<User> = [];
 
 export function mapUserToUsername(id: string): string {
-    return User.getUser(id).username;
+    return User.getUser(id)?.username;
 }
 
 export function notifyAllUsers(): void {

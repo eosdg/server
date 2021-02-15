@@ -115,7 +115,7 @@ export class Game {
         this._participants = this._participants.filter(item => item !== id);
         if (this._host === id) {
             this._host = this._participants[0];
-            User.getUser(this._host).socket.emit("newHost");
+            User.getUser(this._host)?.socket.emit("newHost");
         }
         this.deliverToGameparticipants("participantsChanged", this._participants.map(mapUserToUsername));
         if (this._participants.length === 0) {

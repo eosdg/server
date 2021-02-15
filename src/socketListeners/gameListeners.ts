@@ -35,7 +35,7 @@ export function bindGameListeners(socket: Socket, id: string): void {
     //User actually joined
     socket.on('enterGame', (gameID: string) => {
         if (games[gameID]?.participants.indexOf(id) < 0) games[gameID]?.participants.push(id);
-        games[gameID].deliverToGameparticipants("participantsChanged", games[gameID]?.participants.map(mapUserToUsername));
+        games[gameID]?.deliverToGameparticipants("participantsChanged", games[gameID]?.participants.map(mapUserToUsername));
     });
 
     socket.on("amIHost", gameID => {
@@ -45,17 +45,17 @@ export function bindGameListeners(socket: Socket, id: string): void {
     socket.on("startGame", params => {
         const game = games[params.gameID];
         const firstQuestion = game.startGame(params.settings);
-        game.deliverToGameparticipants("question", firstQuestion);
+        game?.deliverToGameparticipants("question", firstQuestion);
     });
 
     socket.on("nextQuestion", gameID => {
-        games[gameID].deliverToGameparticipants("question", games[gameID].nextQuestion());
+        games[gameID]?.deliverToGameparticipants("question", games[gameID].nextQuestion());
     });
 
     socket.on("answer", answer => {
         const res = games[answer.gameID].addAnswerAndReturnResults(answer.answer, User.getUser(id).username, id);
         if (res) {
-            games[answer.gameID].deliverToGameparticipants("results", res);
+            games[answer.gameID]?.deliverToGameparticipants("results", res);
         }
     });
     socket.on("leaveGame", (gameId) => games[gameId].leaveGameAndCleanUp(id))
