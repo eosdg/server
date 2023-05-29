@@ -7,8 +7,8 @@ export function getID(length = 16): string {
     return Math.random().toString(36).substr(2, length);
 }
 
-export let io;
+export let io: Server | undefined;
 
-export function setIO(io: Server): void {
-    this.io = io;
+export function setIO(io_arg: Server): void {
+    io = io_arg;
 }
