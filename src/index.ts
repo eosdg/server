@@ -42,6 +42,10 @@ io.on("connection", socket => {
     bindUserListeners(socket, id);
 });
 
+io.on("connect_error", (err) => {
+  console.log(`connect_error due to ${err.message}`);
+});
+
 Http.listen(PORT, () => {
     console.log(`Listening at :${PORT}...`);
 });
